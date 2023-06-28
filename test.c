@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <stdio.h>
+#include <math.h>
+# define ESC 65307
 
 typedef struct s_win {
 	void	*mlx;
@@ -12,12 +14,12 @@ typedef struct s_win {
 }				t_win;
 
 typedef struct	s_img {
-	//t_win	win;
+	t_win	win;
 	void	*img;
 	char	*addr;
 	int		width;
 	int		height;
-	int		bytes_per_pixel;
+	int		bits_per_pixel;
 	int		line_length;
 	int		endian;
 }				t_img;
@@ -36,7 +38,7 @@ void	put_pixel(t_img *img, int x, int y, int color)
 
 	if (x >= 0 && y >= 0 && x < img->width && y < img->height)
 	{
-		pixel = img->addr + (y * img->line_length + x * (img->bytes_per_pixel / 8));
+		pixel = img->addr + (y * img->line_length + x * (img->bits_per_pixel / 8));
 		*(unsigned int*)pixel = color;
 	}
 }
@@ -59,7 +61,7 @@ void	draw_square(t_square square, t_img img)
 	}
 }
 
-void	draw_line(t_img *img, int x, int y, int color)
+void	draw_full_line(t_img *img, int x, int y, int color)
 {
 	char	*dest;
 
@@ -68,6 +70,43 @@ void	draw_line(t_img *img, int x, int y, int color)
 		dest = img->addr + (y * img->line_length + x * (img->bits_per_pixel / 8));
 		*(unsigned int*)dest = color;
 		x++;
+	}
+}
+
+void draw_line(t_img *img, int x1, int y1, int x2, int y2, int color)
+{
+	int dx = abs(x2 - x1);
+	int dy = abs(y2 - y1);
+	int sx, sy, err;
+
+	if (x1 < x2)
+		sx = 1;
+	else
+		sx = -1;
+
+	if (y1 < y2)
+		sy = 1;
+	else
+		sy = -1;
+
+	err = dx - dy;
+
+	while (x1 != x2 || y1 != y2)
+	{
+		put_pixel(img, x1, y1, color);
+		int err2 = 2 * err;
+
+		if (err2 > -dy)
+		{
+			err -= dy;
+			x1 += sx;
+		}
+
+		if (err2 < dx)
+		{
+			err += dx;
+			y1 += sy;
+		}
 	}
 }
 
@@ -98,8 +137,23 @@ int	exit_window(t_win *win)
 {
 	if (win)
 		mlx_destroy_window(win->mlx, win->mlx_win);
-		win->mlx_win = NULL;
+		mlx_destroy_display(win->mlx);
+		free(win->mlx);
 		exit (EXIT_SUCCESS);
+		//return (0);
+}
+
+int	handle_key_event(int key_pressed, void	*param)
+{
+	t_img	*img;
+
+	img = (t_img *)param;
+	if (key_pressed == ESC || !img)
+		exit_window(&img->win);
+	else
+        return (-1);
+    //mlx_put_image_to_window(img->win.mlx, img->win.mlx, img->img, 0, 0);
+    return (0);
 }
 
 int	main(void)
@@ -113,9 +167,11 @@ int	main(void)
 	img = new_img(new_win);
 	//put_pixel(&img, new_win.width/2, new_win.height/2, 0x00FFEA00);
 	draw_square((t_square){100, 100, 50, 0x00FFEA00}, img);
-	draw_line(&img, 0, 50, 0x00FFEA00);
+	draw_full_line(&img, 0, 50, 0x00FFEA00);
+	draw_line(&img, 10, 10, 100, 80, 0x00FF00);
 	mlx_put_image_to_window(new_win.mlx, new_win.mlx_win, img.img, 0, 0);
 	mlx_hook(new_win.mlx_win, 17, 0, exit_window, &new_win);
+	mlx_key_hook(new_win.mlx_win, &handle_key_event, &img);
 	mlx_loop(new_win.mlx);
 	return (0);
 }
