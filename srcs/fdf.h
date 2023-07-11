@@ -13,7 +13,10 @@
 # define DOWN 65364
 # define WIDTH 800
 # define HEIGHT 500
+# define SIZE 50
+# define SPACE 20
 # define WHITE 0x00FFFFFF
+# define ANGLE 0.5
 
 
 typedef struct	s_img {

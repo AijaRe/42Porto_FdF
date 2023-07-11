@@ -62,6 +62,7 @@ void	read_file(char *file_name, t_fdf *data)
 	int	width;
 
 	data->height = get_height(file_name);
+	printf("Data height: %d\n", data->height);
 	data->z_matrix = (int **)malloc(sizeof(int *) * (data->height));
 	fd = open (file_name, O_RDONLY, 0);
 	if (fd == -1)
@@ -78,12 +79,13 @@ void	read_file(char *file_name, t_fdf *data)
 		i++;
 	}
 	data->width = width;
+	printf("Data width: %d\n", width);
 	close(fd);
 }
 
-double	find_max(double a, double b)
+int	find_max(int a, int b)
 {
-	double	max;
+	int	max;
 
 	if (a > b)
 		max = a;
@@ -92,15 +94,17 @@ double	find_max(double a, double b)
 	return (max);
 }
 
-t_img	new_img(t_fdf new_win)
+t_img	new_img(t_fdf data)
 {
 	t_img	img;
 
-	img.img = mlx_new_image(new_win.mlx_ptr, new_win.width, new_win.height);
+	img.img = mlx_new_image(data.mlx_ptr, data.width * SIZE, data.height * SIZE);
 	img.addr = mlx_get_data_addr(img.img, &img.bpp, &img.line_length,
 								&img.endian);
-	img.width = new_win.width;
-	img.height = new_win.height;
+	img.width = data.width * SIZE;
+	img.height = data.height * SIZE;
+	printf("Img width: %d\n", img.width);
+	printf("Img height: %d\n", img.height);
 	return (img);
 }
 
@@ -115,25 +119,77 @@ void	put_pixel(t_img *img, int x, int y, int color)
 	}
 }
 
-void	draw_line(t_img *img, float x, float y, float x1, float y1)
+void	isometric(int *x, int *y, int z)
 {
-	float x_step;
-	float y_step;
-	int	max;
+	float	x_tmp;
+	float	y_tmp;
 
+	x_tmp = *x;
+	y_tmp = *y;
+	*x = (x_tmp - y_tmp) * cos(0.523599);
+	*y = (x_tmp + y_tmp) * sin(0.523599) - z;
+
+}
+
+void	draw_line(t_fdf *data, int x, int y, int x1, int y1)
+{
+	int x_step;
+	int y_step;
+	int	max;
+	int z;
+	int z1;
+
+	z = data->z_matrix[y][x];
+	z1 = data->z_matrix[y1][x1];
+
+	x *= SPACE;
+	y *= SPACE;
+	x1 *= SPACE;
+	y1 *= SPACE;
 	x_step = x1 - x;
 	y_step = y1 - y;
-	max = find_max(fabs(x_step), fabs(y_step));
+	printf("Before iso: (x:%d y:%d)\n", x, y);
+	printf("Before iso: (x1:%d y1:%d)\n", x1, y1);
+	isometric(&x, &y, z);
+	isometric(&x1, &y1, z1);
+	printf("After iso: (x:%d y:%d)\n", x, y);
+	printf("After iso: (x1:%d y1:%d)\n", x1, y1);
+	x += data->img.width / 3;
+	y += data->img.height / 3;
+	x1 += data->img.width / 3;
+	y1 += data->img.height / 3;
+	max = find_max(abs(x_step), abs(y_step));
 	x_step /= max;
 	y_step /= max;
-	while ((int)(x - x1) || (int)(y - y1))
+	while ((x - x1) || (y - y1))
 	{
-		put_pixel(img, x, y, WHITE);
+		put_pixel(&data->img, x, y, WHITE);
 		x += x_step;
 		y += y_step;
 	}
-
 }
+
+void	draw_map(t_fdf *data)
+{
+	int	x;
+	int	y;
+
+	y = 0;
+	while (y < data->height)
+	{
+		x = 0;
+		while (x < data->width)
+		{
+			if (x < data->width -1)
+				draw_line(data, x, y, x + 1, y);
+			if (y < data->height -1)
+				draw_line(data, x, y, x, y + 1);
+			x++;
+		}
+		y++;
+	}
+}
+
 t_fdf	new_program(int w, int h, char *str)
 {
 	t_fdf fdf;
@@ -141,7 +197,7 @@ t_fdf	new_program(int w, int h, char *str)
 	fdf.mlx_ptr = mlx_init();
 	fdf.width = w;
 	fdf.height = h;
-	fdf.win_ptr = mlx_new_window(fdf.mlx_ptr, w, h, str);
+	fdf.win_ptr = mlx_new_window(fdf.mlx_ptr, w * SIZE, h * SIZE, str);
 	return (fdf);
 }
 int	exit_window(t_fdf *win)
@@ -162,11 +218,12 @@ int	main(int argc, char **argv)
 		ft_error("Invalid input\nValid input:\n./fdf <filename.fdf>");
 	data = (t_fdf*)malloc(sizeof(t_fdf));
 	read_file(argv[1], data);
-	*data = new_program(WIDTH, HEIGHT, "fdf");
+	*data = new_program(data->width, data->height, "fdf");
 	if (!data->mlx_ptr || !data->win_ptr)
 		return (1);
 	data->img = new_img(*data);
-	draw_line(&(data->img), 10, 10, 110, 110);
+	//draw_line(&(data->img), 10, 10, 110, 110);
+	draw_map(data);
 	mlx_put_image_to_window(data->mlx_ptr, data->win_ptr, data->img.img, 0, 0);
 	mlx_hook(data->win_ptr, 17, 0, exit_window, data);
 	mlx_loop(data->mlx_ptr);
