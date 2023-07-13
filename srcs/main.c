@@ -14,7 +14,7 @@
 
 void	ft_error(char *msg)
 {
-	ft_printf("Error : %s \n", msg);
+	ft_printf("Error : %s\n", msg);
 	exit(EXIT_FAILURE);
 }
 
@@ -26,7 +26,7 @@ int		get_height(char *file_name)
 
 	fd = open(file_name, O_RDONLY, 0);
 	if (fd == -1)
-        ft_error("Failed to open the file.");
+        	ft_error("Failed to open the file.");
 	height = 0;
 	while((line = get_next_line(fd)))
 	{
@@ -66,7 +66,7 @@ void	read_file(char *file_name, t_fdf *data)
 	data->z_matrix = (int **)malloc(sizeof(int *) * (data->height));
 	fd = open (file_name, O_RDONLY, 0);
 	if (fd == -1)
-        ft_error("Failed to open the file.");
+        	ft_error("Failed to open the file.");
 	i = 0;
 	width = 0;
 	while ((line = get_next_line(fd)))
@@ -75,6 +75,7 @@ void	read_file(char *file_name, t_fdf *data)
 			width = ft_count_words(line);
 		data->z_matrix[i] = (int *)malloc(sizeof(int) * (width));
 		fill_matrix(data->z_matrix[i], line);
+		//free(data->z_matrix[i]);
 		free(line);
 		i++;
 	}
@@ -98,11 +99,13 @@ t_img	new_img(t_fdf data)
 {
 	t_img	img;
 
-	img.img = mlx_new_image(data.mlx_ptr, data.width * SIZE, data.height * SIZE);
+	img.img = mlx_new_image(data.mlx_ptr, WIDTH, HEIGHT);
+	if (img.img == NULL)
+		ft_error("Failed to create image.");
 	img.addr = mlx_get_data_addr(img.img, &img.bpp, &img.line_length,
 								&img.endian);
-	img.width = data.width * SIZE;
-	img.height = data.height * SIZE;
+	img.width = WIDTH;
+	img.height = HEIGHT;
 	printf("Img width: %d\n", img.width);
 	printf("Img height: %d\n", img.height);
 	return (img);
@@ -121,8 +124,8 @@ void	put_pixel(t_img *img, int x, int y, int color)
 
 void	isometric(int *x, int *y, int z)
 {
-	float	x_tmp;
-	float	y_tmp;
+	int	x_tmp;
+	int	y_tmp;
 
 	x_tmp = *x;
 	y_tmp = *y;
@@ -131,42 +134,79 @@ void	isometric(int *x, int *y, int z)
 
 }
 
-void	draw_line(t_fdf *data, int x, int y, int x1, int y1)
+void	scale_map(t_fdf *data, int *x1, int *y1, int *x2, int *y2)
 {
-	int x_step;
-	int y_step;
-	int	max;
-	int z;
+	float map_diagonal;
+	float factor;
+	
+	map_diagonal = sqrt(data->width*data->width + data->height*data->height);
+	factor = 0.9 * HEIGHT / map_diagonal;
+	*x1 *= round(factor);
+	*y1 *= round(factor);
+	*x2 *= round(factor);
+	*y2 *= round(factor);
+}
+
+void	center_map(int *x1, int *y1, int *x2, int *y2)
+{
+    int x_offset = WIDTH * 2 / 5;;
+    int y_offset = HEIGHT * 1 / 5;
+
+    *x1 += x_offset;
+    *y1 += y_offset;
+    *x2 += x_offset;
+    *y2 += y_offset;
+}
+
+static void	bresenham_define(t_bresenham *param, int *x1, int *y1, int *x2, int *y2)
+{
+	param->dx = abs(*x2 - *x1);
+	param->dy = -1 * abs(*y2 - *y1);
+	if (*x1 <= *x2)
+		param->sx = 1;
+	else
+		param->sx = -1;
+	if (*y1 <= *y2)
+		param->sy = 1;
+	else
+		param->sy = -1;
+	param->err = param->dx + param->dy;
+	param->x0 = *x1;
+	param->y0 = *y1;
+}
+void draw_line(t_fdf *data, int x1, int y1, int x2, int y2)
+{
 	int z1;
+	int z2;
+	t_bresenham	*param;
 
-	z = data->z_matrix[y][x];
 	z1 = data->z_matrix[y1][x1];
-
-	x *= SPACE;
-	y *= SPACE;
-	x1 *= SPACE;
-	y1 *= SPACE;
-	x_step = x1 - x;
-	y_step = y1 - y;
-	printf("Before iso: (x:%d y:%d)\n", x, y);
-	printf("Before iso: (x1:%d y1:%d)\n", x1, y1);
-	isometric(&x, &y, z);
+	z2 = data->z_matrix[y2][x2];
+	scale_map(data, &x1, &y1, &x2, &y2);
 	isometric(&x1, &y1, z1);
-	printf("After iso: (x:%d y:%d)\n", x, y);
-	printf("After iso: (x1:%d y1:%d)\n", x1, y1);
-	x += data->img.width / 3;
-	y += data->img.height / 3;
-	x1 += data->img.width / 3;
-	y1 += data->img.height / 3;
-	max = find_max(abs(x_step), abs(y_step));
-	x_step /= max;
-	y_step /= max;
-	while ((x - x1) || (y - y1))
+	isometric(&x2, &y2, z2); 
+	center_map(&x1, &y1, &x2, &y2);
+	param = (t_bresenham *)malloc(sizeof(t_bresenham));
+	bresenham_define(param, &x1, &y1, &x2, &y2);
+	while (1)
 	{
-		put_pixel(&data->img, x, y, WHITE);
-		x += x_step;
-		y += y_step;
+		if (param->x0 < WIDTH && param->x0 > 0 && param->y0 < HEIGHT && param->y0 >0)
+			put_pixel(&data->img, param->x0, param->y0, WHITE);
+		if (param->x0 == x2 && param->y0 == y2)
+			break ;
+		param->err2 = 2 * param->err;
+		if (param->err2 >= param->dy && param->x0 != x2)
+		{
+			param->err += param->dy;
+			param->x0 += param->sx;
+		}
+		if (param->err2 <= param->dx && param->y0 != y2)
+		{
+			param->err += param->dx;
+			param->y0 += param->sy;
+		}
 	}
+	free(param);
 }
 
 void	draw_map(t_fdf *data)
@@ -197,7 +237,7 @@ t_fdf	new_program(int w, int h, char *str)
 	fdf.mlx_ptr = mlx_init();
 	fdf.width = w;
 	fdf.height = h;
-	fdf.win_ptr = mlx_new_window(fdf.mlx_ptr, w * SIZE, h * SIZE, str);
+	fdf.win_ptr = mlx_new_window(fdf.mlx_ptr, WIDTH, HEIGHT, str);
 	return (fdf);
 }
 int	exit_window(t_fdf *win)
@@ -206,6 +246,7 @@ int	exit_window(t_fdf *win)
 	{
 		mlx_destroy_window(win->mlx_ptr, win->win_ptr);
 		free(win->mlx_ptr);
+		//free(win);
 		exit (EXIT_SUCCESS);
 	}
 	return (0);
