@@ -62,7 +62,6 @@ void	read_file(char *file_name, t_fdf *data)
 	int	width;
 
 	data->height = get_height(file_name);
-	printf("Data height: %d\n", data->height);
 	data->z_matrix = (int **)malloc(sizeof(int *) * (data->height));
 	fd = open (file_name, O_RDONLY, 0);
 	if (fd == -1)
@@ -80,19 +79,7 @@ void	read_file(char *file_name, t_fdf *data)
 		i++;
 	}
 	data->width = width;
-	printf("Data width: %d\n", width);
 	close(fd);
-}
-
-int	find_max(int a, int b)
-{
-	int	max;
-
-	if (a > b)
-		max = a;
-	else
-		max = b;
-	return (max);
 }
 
 t_img	new_img(t_fdf data)
@@ -106,8 +93,6 @@ t_img	new_img(t_fdf data)
 								&img.endian);
 	img.width = WIDTH;
 	img.height = HEIGHT;
-	printf("Img width: %d\n", img.width);
-	printf("Img height: %d\n", img.height);
 	return (img);
 }
 
@@ -122,85 +107,85 @@ void	put_pixel(t_img *img, int x, int y, int color)
 	}
 }
 
-void	isometric(int *x, int *y, int z)
+void	isometric(t_dot *point)
 {
 	int	x_tmp;
 	int	y_tmp;
 
-	x_tmp = *x;
-	y_tmp = *y;
-	*x = (x_tmp - y_tmp) * cos(0.523599);
-	*y = (x_tmp + y_tmp) * sin(0.523599) - z;
+	x_tmp = point->x;
+	y_tmp = point->y;
+	point->x = (x_tmp - y_tmp) * cos(0.523599);
+	point->y = (x_tmp + y_tmp) * sin(0.523599) - point->z;
 
 }
 
-void	scale_map(t_fdf *data, int *x1, int *y1, int *x2, int *y2)
+void	scale_map(t_fdf *data, t_dot *a, t_dot *b)
 {
 	float map_diagonal;
 	float factor;
 	
-	map_diagonal = sqrt(data->width*data->width + data->height*data->height);
-	factor = 0.9 * HEIGHT / map_diagonal;
-	*x1 *= round(factor);
-	*y1 *= round(factor);
-	*x2 *= round(factor);
-	*y2 *= round(factor);
+	map_diagonal = sqrt(data->width * data->width + data->height * data->height);
+	factor = 0.85 * HEIGHT / map_diagonal;
+	a->x = round(a->x * factor);
+	a->y = round(a->y * factor);
+	b->x = round(b->x * factor);
+	b->y = round(b->y * factor);
 }
 
-void	center_map(int *x1, int *y1, int *x2, int *y2)
+void	center_map(t_dot *a, t_dot *b)
 {
     int x_offset = WIDTH * 2 / 5;;
     int y_offset = HEIGHT * 1 / 5;
 
-    *x1 += x_offset;
-    *y1 += y_offset;
-    *x2 += x_offset;
-    *y2 += y_offset;
+    a->x += x_offset;
+    a->y += y_offset;
+    b->x += x_offset;
+    b->y += y_offset;
+}
+void	transform_map(t_fdf *data, t_dot *a, t_dot *b)
+{
+	scale_map(data, a, b);
+	isometric(a);
+	isometric(b); 
+	center_map(a, b);
 }
 
-static void	bresenham_define(t_bresenham *param, int *x1, int *y1, int *x2, int *y2)
+static void	bresenham_define(t_bresenham *param, t_dot *a, t_dot *b)
 {
-	param->dx = abs(*x2 - *x1);
-	param->dy = -1 * abs(*y2 - *y1);
-	if (*x1 <= *x2)
+	param->dx = abs(b->x - a->x);
+	param->dy = -1 * abs(b->y - a->y);
+	if (a->x <= b->x)
 		param->sx = 1;
 	else
 		param->sx = -1;
-	if (*y1 <= *y2)
+	if (a->y <= b->y)
 		param->sy = 1;
 	else
 		param->sy = -1;
 	param->err = param->dx + param->dy;
-	param->x0 = *x1;
-	param->y0 = *y1;
+	param->x0 = a->x;
+	param->y0 = a->y;
 }
-void draw_line(t_fdf *data, int x1, int y1, int x2, int y2)
+void draw_line(t_fdf *data, t_dot *a, t_dot *b)
 {
-	int z1;
-	int z2;
 	t_bresenham	*param;
 
-	z1 = data->z_matrix[y1][x1];
-	z2 = data->z_matrix[y2][x2];
-	scale_map(data, &x1, &y1, &x2, &y2);
-	isometric(&x1, &y1, z1);
-	isometric(&x2, &y2, z2); 
-	center_map(&x1, &y1, &x2, &y2);
+	transform_map(data, a, b);
 	param = (t_bresenham *)malloc(sizeof(t_bresenham));
-	bresenham_define(param, &x1, &y1, &x2, &y2);
+	bresenham_define(param, a, b);
 	while (1)
 	{
 		if (param->x0 < WIDTH && param->x0 > 0 && param->y0 < HEIGHT && param->y0 >0)
 			put_pixel(&data->img, param->x0, param->y0, WHITE);
-		if (param->x0 == x2 && param->y0 == y2)
+		if (param->x0 == b->x && param->y0 == b->y)
 			break ;
 		param->err2 = 2 * param->err;
-		if (param->err2 >= param->dy && param->x0 != x2)
+		if (param->err2 >= param->dy && param->x0 != b->x)
 		{
 			param->err += param->dy;
 			param->x0 += param->sx;
 		}
-		if (param->err2 <= param->dx && param->y0 != y2)
+		if (param->err2 <= param->dx && param->y0 != b->y)
 		{
 			param->err += param->dx;
 			param->y0 += param->sy;
@@ -209,10 +194,46 @@ void draw_line(t_fdf *data, int x1, int y1, int x2, int y2)
 	free(param);
 }
 
-void	draw_map(t_fdf *data)
+void draw_horizontal_lines(t_fdf *data, int x, int y)
 {
-	int	x;
-	int	y;
+	t_dot a;
+	t_dot b;
+
+	a.x = x;
+	a.y = y;
+	a.z = data->z_matrix[y][x];
+	a.color = WHITE;
+
+	b.x = x + 1;
+	b.y = y;
+	b.z = data->z_matrix[y][x + 1];
+	b.color = WHITE;
+
+	draw_line(data, &a, &b);
+}
+
+void draw_vertical_lines(t_fdf *data, int x, int y)
+{
+	t_dot a;
+	t_dot b;
+
+	a.x = x;
+	a.y = y;
+	a.z = data->z_matrix[y][x];
+	a.color = WHITE;
+
+	b.x = x;
+	b.y = y + 1;
+	b.z = data->z_matrix[y + 1][x];
+	b.color = WHITE;
+
+	draw_line(data, &a, &b);
+}
+
+void draw_map(t_fdf *data)
+{
+	int x;
+	int y;
 
 	y = 0;
 	while (y < data->height)
@@ -220,10 +241,10 @@ void	draw_map(t_fdf *data)
 		x = 0;
 		while (x < data->width)
 		{
-			if (x < data->width -1)
-				draw_line(data, x, y, x + 1, y);
-			if (y < data->height -1)
-				draw_line(data, x, y, x, y + 1);
+			if (x < data->width - 1)
+				draw_horizontal_lines(data, x, y);
+			if (y < data->height - 1)
+				draw_vertical_lines(data, x, y);
 			x++;
 		}
 		y++;
@@ -263,7 +284,6 @@ int	main(int argc, char **argv)
 	if (!data->mlx_ptr || !data->win_ptr)
 		return (1);
 	data->img = new_img(*data);
-	//draw_line(&(data->img), 10, 10, 110, 110);
 	draw_map(data);
 	mlx_put_image_to_window(data->mlx_ptr, data->win_ptr, data->img.img, 0, 0);
 	mlx_hook(data->win_ptr, 17, 0, exit_window, data);

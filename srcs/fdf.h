@@ -11,8 +11,8 @@
 # define ESC 65307
 # define UP 65362
 # define DOWN 65364
-# define WIDTH 1200
-# define HEIGHT 900
+# define WIDTH 1920
+# define HEIGHT 1200
 # define WHITE 0x00FFFFFF
 
 typedef struct s_bresenham
@@ -26,6 +26,13 @@ typedef struct s_bresenham
 	int	err;
 	int	err2;
 }		t_bresenham;
+
+typedef struct	s_dot{
+	int	x;
+	int	y;
+	int	z;
+	int	color;
+}		t_dot;
 
 typedef struct	s_img {
 	void	*img;
