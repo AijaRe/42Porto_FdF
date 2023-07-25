@@ -38,20 +38,40 @@ int		get_height(char *file_name)
 
 }
 
-void	fill_matrix(int *z_line, char *line)
+void	free_tab(char **tab)
 {
-	char **numbers;
 	int	i;
 
-	numbers = ft_split(line, ' ');
 	i = 0;
-	while (numbers[i])
+	while (tab[i] != NULL)
 	{
-		z_line[i] = ft_atoi(numbers[i]);
-		free(numbers[i]);
-		i++;	
+		free(tab[i]);
+		i++;
 	}
-	free(numbers);
+	free(tab);
+}
+
+void	split_line(t_dot *matrix, char *line)
+{
+	char **points;
+	int	i;
+
+	points = ft_split(line, ' ');
+	i = 0;
+	while (points[i])
+	{
+			matrix[i].z = ft_atoi(points[i]);
+			matrix[i].x = 0;
+			matrix[i].y = 0;
+			if (!ft_strchr(points[i], ','))
+					matrix[i].color = WHITE;
+			else
+			{
+				matrix[i].color = ft_atoi_hex(ft_strchr(points[i], ',') + 3);
+			}
+			i++;
+	}
+	free_tab(points);
 }
 
 void	read_file(char *file_name, t_fdf *data)
@@ -62,7 +82,7 @@ void	read_file(char *file_name, t_fdf *data)
 	int	width;
 
 	data->height = get_height(file_name);
-	data->z_matrix = (int **)malloc(sizeof(int *) * (data->height));
+	data->z_matrix = (t_dot **)malloc(sizeof(t_dot *) * (data->height));
 	fd = open (file_name, O_RDONLY, 0);
 	if (fd == -1)
         	ft_error("Failed to open the file.");
@@ -72,9 +92,8 @@ void	read_file(char *file_name, t_fdf *data)
 	{
 		if (width == 0)
 			width = ft_count_words(line);
-		data->z_matrix[i] = (int *)malloc(sizeof(int) * (width));
-		fill_matrix(data->z_matrix[i], line);
-		//free(data->z_matrix[i]);
+		data->z_matrix[i] = (t_dot *)malloc(sizeof(t_dot) * (width));
+		split_line(data->z_matrix[i], line);
 		free(line);
 		i++;
 	}
@@ -107,6 +126,16 @@ void	put_pixel(t_img *img, int x, int y, int color)
 	}
 }
 
+int	get_color(t_dot *a, t_dot *z)
+{
+	if (a->color != WHITE) 
+        return a->color;
+    if (z->color != WHITE) 
+	{
+        return z->color;
+	}
+	return (WHITE);
+}
 void	isometric(t_dot *point)
 {
 	int	x_tmp;
@@ -116,7 +145,6 @@ void	isometric(t_dot *point)
 	y_tmp = point->y;
 	point->x = (x_tmp - y_tmp) * cos(0.523599);
 	point->y = (x_tmp + y_tmp) * sin(0.523599) - point->z;
-
 }
 
 void	scale_map(t_fdf *data, t_dot *a, t_dot *b)
@@ -166,6 +194,7 @@ static void	bresenham_define(t_bresenham *param, t_dot *a, t_dot *b)
 	param->x0 = a->x;
 	param->y0 = a->y;
 }
+
 void draw_line(t_fdf *data, t_dot *a, t_dot *b)
 {
 	t_bresenham	*param;
@@ -176,7 +205,7 @@ void draw_line(t_fdf *data, t_dot *a, t_dot *b)
 	while (1)
 	{
 		if (param->x0 < WIDTH && param->x0 > 0 && param->y0 < HEIGHT && param->y0 >0)
-			put_pixel(&data->img, param->x0, param->y0, WHITE);
+			put_pixel(&data->img, param->x0, param->y0, get_color(a, b));
 		if (param->x0 == b->x && param->y0 == b->y)
 			break ;
 		param->err2 = 2 * param->err;
@@ -201,13 +230,13 @@ void draw_horizontal_lines(t_fdf *data, int x, int y)
 
 	a.x = x;
 	a.y = y;
-	a.z = data->z_matrix[y][x];
-	a.color = WHITE;
+	a.z = data->z_matrix[y][x].z;
+	a.color = data->z_matrix[y][x].color;
 
 	b.x = x + 1;
 	b.y = y;
-	b.z = data->z_matrix[y][x + 1];
-	b.color = WHITE;
+	b.z = data->z_matrix[y][x + 1].z;
+	b.color = data->z_matrix[y][x + 1].color;
 
 	draw_line(data, &a, &b);
 }
@@ -219,13 +248,13 @@ void draw_vertical_lines(t_fdf *data, int x, int y)
 
 	a.x = x;
 	a.y = y;
-	a.z = data->z_matrix[y][x];
-	a.color = WHITE;
+	a.z = data->z_matrix[y][x].z;
+	a.color = data->z_matrix[y][x].color;
 
 	b.x = x;
 	b.y = y + 1;
-	b.z = data->z_matrix[y + 1][x];
-	b.color = WHITE;
+	b.z = data->z_matrix[y + 1][x].z;
+	b.color = data->z_matrix[y + 1][x].color;
 
 	draw_line(data, &a, &b);
 }
@@ -247,8 +276,10 @@ void draw_map(t_fdf *data)
 				draw_vertical_lines(data, x, y);
 			x++;
 		}
+		free(data->z_matrix[y]);
 		y++;
 	}
+	free(data->z_matrix);
 }
 
 t_fdf	new_program(int w, int h, char *str)
@@ -266,11 +297,21 @@ int	exit_window(t_fdf *win)
 	if (win)
 	{
 		mlx_destroy_window(win->mlx_ptr, win->win_ptr);
+		mlx_destroy_display(win->mlx_ptr);
 		free(win->mlx_ptr);
-		//free(win);
+		free(win);
 		exit (EXIT_SUCCESS);
 	}
 	return (0);
+}
+int	handle_key_event(int key_pressed, void	*param)
+{
+	t_fdf	*win;
+
+	win = (t_fdf *)param;
+	if (key_pressed == ESC || !win)
+		exit_window(win);
+    return (0);
 }
 int	main(int argc, char **argv)
 {
@@ -287,6 +328,9 @@ int	main(int argc, char **argv)
 	draw_map(data);
 	mlx_put_image_to_window(data->mlx_ptr, data->win_ptr, data->img.img, 0, 0);
 	mlx_hook(data->win_ptr, 17, 0, exit_window, data);
+	mlx_key_hook(data->win_ptr, &handle_key_event, data);
 	mlx_loop(data->mlx_ptr);
+	free(data);
+	exit(EXIT_SUCCESS);
 	return (0);
 }

@@ -9,8 +9,6 @@
 # include <math.h>
 
 # define ESC 65307
-# define UP 65362
-# define DOWN 65364
 # define WIDTH 1920
 # define HEIGHT 1200
 # define WHITE 0x00FFFFFF
@@ -48,7 +46,7 @@ typedef struct s_fdf
 {
 	int		width;
 	int		height;
-	int		**z_matrix;
+	t_dot	**z_matrix;
 	void	*mlx_ptr;
 	void	*win_ptr;
 	t_img	img;
