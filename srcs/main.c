@@ -296,6 +296,7 @@ int	exit_window(t_fdf *win)
 {
 	if (win)
 	{
+		mlx_destroy_image(win->mlx_ptr, win->img.img);
 		mlx_destroy_window(win->mlx_ptr, win->win_ptr);
 		mlx_destroy_display(win->mlx_ptr);
 		free(win->mlx_ptr);
@@ -313,12 +314,28 @@ int	handle_key_event(int key_pressed, void	*param)
 		exit_window(win);
     return (0);
 }
+
+void	handle_input_errors(int argc, char *file)
+{
+	int	fd;
+
+	if (argc != 2)
+	{
+		ft_error("Invalid input\nValid input:\n./fdf <filename.fdf>");
+	}		
+	fd = open(file, O_RDONLY, 0);
+	if (fd == -1)
+	{
+		ft_error("Failed to open the file");
+	}
+	else
+		close(fd);
+}
 int	main(int argc, char **argv)
 {
 	t_fdf	*data;
 
-	if (argc != 2)
-		ft_error("Invalid input\nValid input:\n./fdf <filename.fdf>");
+	handle_input_errors(argc, argv[1]);
 	data = (t_fdf*)malloc(sizeof(t_fdf));
 	read_file(argv[1], data);
 	*data = new_program(data->width, data->height, "fdf");
