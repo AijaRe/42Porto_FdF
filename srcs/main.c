@@ -12,10 +12,41 @@
 
 #include "fdf.h"
 
+void	free_map(char **map)
+{
+	int	i;
+
+	i = 0;
+
+	if (map)
+	{
+		while (map[i])
+		{
+			printf("%d: %s\n", i, map[i]);
+			free(map[i]);
+			i++;
+		}
+		free(map);
+	}
+}
+
 void	ft_error(char *msg)
 {
 	ft_printf("Error : %s\n", msg);
 	exit(EXIT_FAILURE);
+}
+
+void	ft_freematrix(t_fdf *data, int i)
+{
+	
+	while (i >= 0)
+	{
+		if (data->z_matrix[i])
+			free(data->z_matrix[i]);
+		i--;
+	}
+	free(data->z_matrix);
+	free(data);
 }
 
 int		get_height(char *file_name)
@@ -24,10 +55,11 @@ int		get_height(char *file_name)
 	int	height;
 	char *line;
 
+	height = 0;
 	fd = open(file_name, O_RDONLY, 0);
+	line = NULL;
 	if (fd == -1)
         	ft_error("Failed to open the file.");
-	height = 0;
 	while((line = get_next_line(fd)))
 	{
 		height++;
@@ -50,6 +82,8 @@ void	free_tab(char **tab)
 	}
 	free(tab);
 }
+
+
 
 void	split_line(t_dot *matrix, char *line)
 {
@@ -74,32 +108,83 @@ void	split_line(t_dot *matrix, char *line)
 	free_tab(points);
 }
 
-void	read_file(char *file_name, t_fdf *data)
+void	get_file(t_fdf *data, char *file_name)
 {
 	int	fd;
-	char *line;
-	int	i;
-	int	width;
+	int i;
 
+	i = 0;
 	data->height = get_height(file_name);
-	data->z_matrix = (t_dot **)malloc(sizeof(t_dot *) * (data->height));
+	data->map = malloc(sizeof(char *) * (data->height + 1));
 	fd = open (file_name, O_RDONLY, 0);
 	if (fd == -1)
         	ft_error("Failed to open the file.");
-	i = 0;
-	width = 0;
-	while ((line = get_next_line(fd)))
+	data->map[0] = get_next_line(fd);
+	//printf("%i, %s\n", i, data->map[i]);
+	while (data->map[i])
 	{
-		if (width == 0)
-			width = ft_count_words(line);
-		data->z_matrix[i] = (t_dot *)malloc(sizeof(t_dot) * (width));
-		split_line(data->z_matrix[i], line);
-		free(line);
-		i++;
+		data->map[++i] = get_next_line(fd);
+		//printf("%i, %s\n", i, data->map[i]);
 	}
-	data->width = width;
 	close(fd);
 }
+
+void	read_file(t_fdf *data)
+{
+	int	i;
+	int	prev_width;
+	int curr_width;
+
+	data->z_matrix = (t_dot **)malloc(sizeof(t_dot *) * (data->height));
+	i = 0;
+	curr_width = 0;
+	prev_width = 0;
+	while ((data->map[i]))
+	{
+		curr_width = ft_count_words(data->map[i]);
+        if (prev_width == 0)
+            prev_width = curr_width;
+		else if (curr_width != prev_width)
+        {
+			free_map(data->map);
+            ft_freematrix(data, i - 1);
+            ft_error("Invalid map: Rows have different sizes.");
+        }
+		data->z_matrix[i] = (t_dot *)malloc(sizeof(t_dot) * (curr_width));
+		 if (!data->z_matrix[i])	
+		{
+            ft_freematrix(data, i);
+            ft_error("Memory allocation failed for data->z_matrix[i]");
+        }
+		split_line(data->z_matrix[i], data->map[i]);
+		i++;
+	}
+	free_tab(data->map);
+	data->width = curr_width;
+}
+	/* 
+    while ((line = get_next_line(fd)))
+    {
+        curr_width = ft_count_words(line);
+        if (prev_width == 0)
+            prev_width = curr_width;
+        else if (curr_width != prev_width)
+        {
+            ft_freematrix(data, i); 
+			free(line); 
+            ft_error("Invalid map: Rows have different sizes.");
+        }
+        data->z_matrix[i] = (t_dot *)malloc(sizeof(t_dot) * (curr_width));
+		 if (!data->z_matrix[i])
+        {
+            ft_freematrix(data, i);
+			free(line);
+            ft_error("Memory allocation failed for data->z_matrix[i]");
+        }
+        split_line(data->z_matrix[i], line);
+        free(line);
+        i++; */
+
 
 t_img	new_img(t_fdf data)
 {
@@ -331,13 +416,41 @@ void	handle_input_errors(int argc, char *file)
 	else
 		close(fd);
 }
+	
+/* void	handle_map_errors(t_fdf *data)
+{
+	int	i;
+	int	j;
+	int	count;
+
+	i = 0;
+	while(data->z_matrix[i])
+	{
+		j = 0;
+		while(data->z_matrix[i][j])
+		{
+			j++;
+		}
+		if(i != 0 && count != j)
+		{
+			i = data->height;
+			ft_freematrix(data, i);
+            ft_error("Invalid map: rows of different size.");
+		}
+		count = j;
+		i++;
+	}
+}  */
+
 int	main(int argc, char **argv)
 {
 	t_fdf	*data;
 
 	handle_input_errors(argc, argv[1]);
 	data = (t_fdf*)malloc(sizeof(t_fdf));
-	read_file(argv[1], data);
+	get_file(data, argv[1]);
+	read_file(data);
+	//handle_map_errors(data);
 	*data = new_program(data->width, data->height, "fdf");
 	if (!data->mlx_ptr || !data->win_ptr)
 		return (1);

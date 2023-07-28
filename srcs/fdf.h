@@ -7,11 +7,13 @@
 # include <errno.h>
 # include <stdio.h>
 # include <math.h>
+# include <limits.h>
 
 # define ESC 65307
 # define WIDTH 1920
 # define HEIGHT 1200
 # define WHITE 0x00FFFFFF
+#define END INT_MAX
 
 typedef struct s_bresenham
 {
@@ -46,6 +48,7 @@ typedef struct s_fdf
 {
 	int		width;
 	int		height;
+	char	**map;
 	t_dot	**z_matrix;
 	void	*mlx_ptr;
 	void	*win_ptr;
