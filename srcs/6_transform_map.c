@@ -12,6 +12,7 @@
 
 #include "fdf.h"
 
+/* Tilt of 30 degrees (expressed in radians)*/
 static void	isometric(t_dot *point)
 {
 	int	x_tmp;
@@ -23,6 +24,9 @@ static void	isometric(t_dot *point)
 	point->y = (x_tmp + y_tmp) * sin(0.523599) - point->z;
 }
 
+/* Scale the map, maintaining original aspect ratio.
+* Factor based on the diagonal of the map
+* Scale factor = New shape dimensions / Original shape dimensions*/
 static void	scale_map(t_fdf *data, t_dot *a, t_dot *b)
 {
 	float	map_diagonal;

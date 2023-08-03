@@ -26,15 +26,10 @@ t_img	new_img(t_fdf data)
 	return (img);
 }
 
-t_fdf	new_program(int w, int h, char *str)
+void	new_program(t_fdf *data, char *str)
 {
-	t_fdf	fdf;
-
-	fdf.mlx_ptr = mlx_init();
-	fdf.width = w;
-	fdf.height = h;
-	fdf.win_ptr = mlx_new_window(fdf.mlx_ptr, WIDTH, HEIGHT, str);
-	return (fdf);
+	data->mlx_ptr = mlx_init();
+	data->win_ptr = mlx_new_window(data->mlx_ptr, WIDTH, HEIGHT, str);
 }
 
 int	exit_window(t_fdf *win)
@@ -67,9 +62,11 @@ int	main(int argc, char **argv)
 
 	handle_input_errors(argc, argv[1]);
 	data = (t_fdf *)malloc(sizeof(t_fdf));
+	if (!data)
+		ft_error("Failed to create program.");
 	get_map(data, argv[1]);
 	read_file(data);
-	*data = new_program(data->width, data->height, "fdf");
+	new_program(data, "fdf");
 	if (!data->mlx_ptr || !data->win_ptr)
 		return (1);
 	data->img = new_img(*data);

@@ -12,6 +12,8 @@
 
 #include "fdf.h"
 
+/* Set the starting point and decide weather to increment or decrement
+* each axis, based on difference between starting and ending points*/
 static void	bresenham_define(t_bresenham *param, t_dot *a, t_dot *b)
 {
 	param->dx = abs(b->x - a->x);
@@ -29,6 +31,9 @@ static void	bresenham_define(t_bresenham *param, t_dot *a, t_dot *b)
 	param->y0 = a->y;
 }
 
+/* Check if the current point is within image boundaries
+* Check if we have reached the end point
+* Increment or decrement x and y coordinates based on error parameter*/
 void	draw_line(t_fdf *data, t_dot *a, t_dot *b)
 {
 	t_bresenham	param;

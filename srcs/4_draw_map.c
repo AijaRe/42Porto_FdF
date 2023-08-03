@@ -11,6 +11,7 @@
 /* ************************************************************************** */
 
 #include "fdf.h"
+#include <stdio.h>
 
 static void	draw_horizontal_lines(t_fdf *data, int x, int y)
 {
@@ -56,9 +57,13 @@ void	draw_map(t_fdf *data)
 		while (x < data->width)
 		{
 			if (x < data->width - 1)
+			{
 				draw_horizontal_lines(data, x, y);
+			}
 			if (y < data->height - 1)
+			{
 				draw_vertical_lines(data, x, y);
+			}
 			x++;
 		}
 		free(data->z_matrix[y]);
