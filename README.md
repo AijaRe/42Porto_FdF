@@ -30,3 +30,10 @@ dow, minimizing, and so forth).
 - Clicking on the cross on the window’s frame must close the window and quit the
 program in a clean way.
 - The use of the images of the MiniLibX is mandatory.
+
+## Materials
+
+MiniLibX Guides
+ - [Harm Smits MiniLibX Guide](https://harm-smits.github.io/42docs/libs/minilibx)
+ - [PulgaMecanica MiniLibX Guide](https://pulgamecanica.herokuapp.com/posts/7)
+ - [Aurelien Brabant MiniLibX Guide](https://aurelienbrabant.fr/blog/pixel-drawing-with-the-minilibx)
