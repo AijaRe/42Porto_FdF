@@ -42,7 +42,14 @@ MiniLibX Guides
  - [Harm Smits MiniLibX Guide](https://harm-smits.github.io/42docs/libs/minilibx)
  - [PulgaMecanica MiniLibX Guide](https://pulgamecanica.herokuapp.com/posts/7)
  - [Aurelien Brabant MiniLibX Guide](https://aurelienbrabant.fr/blog/pixel-drawing-with-the-minilibx)
+
+Bresenham Drawing Algorithm
+
+- [Difference between DDA and Bresenham](https://www.tutorialandexample.com/line-drawing-algorithm)
+- [Bresenham algorithm demonstration by Abdul Bari YouTube](https://www.youtube.com/watch?v=RGB-wlatStc&t=2286s)
+- [Tutorial on Bresenhams for all octants](https://jstutorial.medium.com/how-to-code-your-first-algorithm-draw-a-line-ca121f9a1395)
    
 Other materials
 - [Error handling YouTube](https://www.youtube.com/watch?v=OOuZLI5ingc)
 - [Exit function YouTube](https://www.youtube.com/watch?v=8RucxSeAemw)
+- [Isometric projection Wikipedia](https://en.wikipedia.org/wiki/Isometric_projection)
