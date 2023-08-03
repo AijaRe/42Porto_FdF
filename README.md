@@ -31,9 +31,18 @@ dow, minimizing, and so forth).
 program in a clean way.
 - The use of the images of the MiniLibX is mandatory.
 
+## Tips
+
+Keycodes: look for X11 include file "keysymdef.h” /usr/include/X11/keysymdef.h. Convert hex to dec to use in the code.
+Or you can use this little handy program to find your keycodes: [Keychecker from Heitor github](https://github.com/HeitorMP/minilibx_key_checker/).
+
 ## Materials
 
 MiniLibX Guides
  - [Harm Smits MiniLibX Guide](https://harm-smits.github.io/42docs/libs/minilibx)
  - [PulgaMecanica MiniLibX Guide](https://pulgamecanica.herokuapp.com/posts/7)
  - [Aurelien Brabant MiniLibX Guide](https://aurelienbrabant.fr/blog/pixel-drawing-with-the-minilibx)
+   
+Other materials
+- [Error handling YouTube](https://www.youtube.com/watch?v=OOuZLI5ingc)
+- [Exit function YouTube](https://www.youtube.com/watch?v=8RucxSeAemw)
