@@ -12,96 +12,75 @@
 
 #include "libft.h"
 
-/*while not the end of string and separator is not found..*/
-/*..iterate over the word*/
-/*when there is a new word and separator is found or it's the end..*/
-/*..move general index to this position, start new word index..*/
-/*..and register string number*/
-static int	count_strs(char const *s, char c)
-{
-	size_t	i;
-	size_t	j;
-	size_t	strs;
-
-	i = 0;
-	j = 0;
-	strs = 0;
-	while (s[i] != '\0')
-	{
-		while (s[i + j] != '\0' && s[i + j] != c)
-			j++;
-		if (j > 0)
-		{
-			i = i + j;
-			j = 0;
-			strs++;
-		}
-		else
-			i++;
-	}
-	return (strs);
-}
-
-/*free memory in case of error in new strings*/
-static void	free_strs(char **new, int j)
+static size_t	ft_strlen_limit(char const *str, char delim)
 {
 	int	i;
 
 	i = 0;
-	while (i < j)
-	{
-		free(new[i]);
+	while (str[i] && str[i] != delim)
 		i++;
-	}
-	free(new);
-	return ;
+	return (i);
 }
 
-/*if - condition to write start of the string*/
-/*keeps iterating until finds new separator or end of string*/
-/*when the condition above is true, outputs string*/
-static void	sep_strs(char const *s, char c, char **new)
+static int	count_strs(char const *s, char c)
 {
 	size_t	i;
-	size_t	j;
-	int		start;
+	size_t	len;
+	int		n;
 
 	i = 0;
-	j = 0;
-	start = -1;
-	while (i <= ft_strlen(s))
+	n = 0;
+	while (s[i])
 	{
-		if (s[i] != c && start < 0)
-			start = i;
-		else if ((s[i] == c || i == ft_strlen(s)) && start >= 0)
-		{
-			new[j] = ft_substr(s, start, i - start);
-			if (!new[j])
-			{
-				free_strs(new, j);
-				return ;
-			}
-			j++;
-			start = -1;
-		}
-		i++;
+		while (s[i] == c)
+			i++;
+		len = ft_strlen_limit(s + i, c);
+		i += len;
+		if (len > 0)
+			n++;
 	}
+	return (n);
+}
+
+static void	*free_tab(char **tab)
+{
+	int	i;
+
+	i = 0;
+	while (tab[i])
+		free(tab[i++]);
+	free(tab);
+	return (NULL);
 }
 
 /*allocate memory for pointers to each new string*/
+/*keeps iterating until finds new separator or end of string*/
+/*when the condition above is true, outputs string*/
 /*ft condition: add last NULL string*/
 char	**ft_split(char const *s, char c)
 {
+	size_t	i;
+	int		j;
+	int		num;
 	char	**new;
-	int		str_nb;
 
 	if (!s)
 		return (NULL);
-	str_nb = count_strs(s, c);
-	new = malloc(sizeof(char *) * (str_nb + 1));
+	i = 0;
+	j = -1;
+	num = count_strs(s, c);
+	new = (char **)malloc(sizeof(char *) * (num + 1));
 	if (!new)
 		return (NULL);
-	sep_strs(s, c, new);
-	new[str_nb] = NULL;
+	while (++j < num)
+	{
+		while (s[i] == c)
+			i++;
+		new[j] = ft_substr(s, i, ft_strlen_limit(s + i, c));
+		if (!new[j])
+			return (free_tab(new));
+		i += ft_strlen_limit(s + i, c);
+	}
+	new[num] = NULL;
 	return (new);
 }

@@ -23,7 +23,7 @@ static char	*get_remainder(char *str)
 	i = 0;
 	while (str[i] && str[i] != '\n')
 		i++;
-	if (!str[i])
+	if (str[i] == '\0' || str[i + 1] == '\0')
 	{
 		free(str);
 		return (NULL);
@@ -42,7 +42,7 @@ static char	*get_remainder(char *str)
 
 /*	Extract the line (ending in either '\n' and `\0` or only `\0`)
 *	from static variable.
-*	Return the string ending in `\0`.*/
+*	Return the string ending in a line break (`\n` + `\0`).*/
 static char	*trim_new_line(char *str)
 {
 	char	*line;
@@ -53,11 +53,16 @@ static char	*trim_new_line(char *str)
 		return (NULL);
 	while (str[i] != '\0' && str[i] != '\n')
 		i++;
-	line = malloc(sizeof(char) * (i + 1));
+	line = malloc(sizeof(char) * (i + 2));
 	if (!line)
 		return (NULL);
 	i = 0;
 	while (str[i] && str[i] != '\n')
+	{
+		line[i] = str[i];
+		i++;
+	}
+	if (str[i] == '\n')
 	{
 		line[i] = str[i];
 		i++;
@@ -105,12 +110,6 @@ char	*get_next_line(int fd)
 	if (!str)
 		return (NULL);
 	line = trim_new_line(str);
-	if (!line)
-	{
-		free(str);
-		str = malloc(1);
-		str[0] = '\0';
-	}
 	str = get_remainder(str);
 	return (line);
 }

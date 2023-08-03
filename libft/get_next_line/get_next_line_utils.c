@@ -51,7 +51,7 @@ char	*ft_strjoin_gnl(char *s1, char *s2)
 		s1[0] = '\0';
 	}
 	joined = (char *)malloc(sizeof(char) * \
-			(ft_strlen_gnl(s1) + ft_strlen_gnl(s2) + 1));
+		(ft_strlen_gnl(s1) + ft_strlen_gnl(s2) + 1));
 	if (!joined)
 		return (NULL);
 	while (s1[++i] != '\0')

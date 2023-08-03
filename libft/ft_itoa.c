@@ -15,30 +15,24 @@
 /*count the length of the integer*/
 /*how many times it divides by 10*/
 /*negatives get extra space for '-'*/
-static	int	ft_length(int n)
+static int	get_size(int n)
 {
-	int	length;
+	int		size;
+	long	num;
 
-	length = 0;
-	if (n == 0)
-		return (1);
+	size = 1;
+	num = n;
 	if (n < 0)
-		length++;
-	while (n)
 	{
-		n = n / 10;
-		length++;
+		num = -num;
+		size++;
 	}
-	return (length);
-}
-
-static char	*ft_max_neg(void)
-{
-	char	*res;
-
-	res = malloc(sizeof(char) * 12);
-	ft_strlcpy(res, "-2147483648", 12);
-	return (res);
+	while (num >= 10)
+	{
+		num /= 10;
+		size++;
+	}
+	return (size);
 }
 
 /*convert integer to character*/
@@ -48,28 +42,26 @@ static char	*ft_max_neg(void)
 /*to get the next number, divide by 10 and back up one position*/
 char	*ft_itoa(int n)
 {
-	char	*res;
-	int		len;
+	long	num;
+	int		size;
+	char	*str;
 
-	if (n == -2147483648)
-		return (ft_max_neg());
-	len = ft_length(n);
-	res = (char *)malloc(sizeof(char) * (len + 1));
-	if (res == 0)
-		return (0);
-	if (n == 0)
-		res[0] = '0';
+	num = n;
 	if (n < 0)
+		num = -num;
+	size = get_size(n);
+	str = (char *)malloc(size + 1);
+	if (!str)
+		return (NULL);
+	if (n < 0)
+		str[0] = '-';
+	else if (n == 0)
+		str[0] = '0';
+	str[size--] = '\0';
+	while (num > 0)
 	{
-		n *= -1;
-		res[0] = '-';
+		str[size--] = num % 10 + '0';
+		num /= 10;
 	}
-	res[len] = '\0';
-	while (n != 0)
-	{
-		res[len - 1] = n % 10 + '0';
-		n = n / 10;
-		len--;
-	}
-	return (res);
+	return (str);
 }
