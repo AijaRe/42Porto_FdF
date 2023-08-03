@@ -6,7 +6,7 @@
 #    By: arepsa <marvin@42.fr>                      +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/08/01 10:56:34 by arepsa            #+#    #+#              #
-#    Updated: 2023/08/01 10:56:39 by arepsa           ###   ########.fr        #
+#    Updated: 2023/08/03 09:21:48 by arepsa           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -45,13 +45,16 @@ $(NAME): $(OBJS) $(LIBFT) $(LIBMLX)
 	echo "Done compiling fdf!"
 
 $(OBJS_DIR)/%.o: $(SRCS_DIR)/%.c
+	echo "Creating $(NAME) .o files..."
 	mkdir -p $(@D)
 	$(CC) -I $(INCLUDES) $(CFLAGS) -c $< -o $@
 
 $(LIBFT):
+	echo "Making libft..."
 	$(MAKE) $(MK_FLAG) -C $(LIBFT_DIR)
 
 $(LIBMLX):
+	echo "Making MiniLibX..."
 	$(MAKE) $(MK_FLAG) -sC $(MLX_DIR)
 
 clean:
