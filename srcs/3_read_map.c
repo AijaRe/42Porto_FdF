@@ -58,11 +58,12 @@ static void	split_line(t_dot *matrix, char *line)
 	free_tab(points);
 }
 
-/*copy map data into char arry*/
+/*copy map data into char array and trim newline char*/
 void	get_map(t_fdf *data, char *file_name)
 {
-	int	fd;
-	int	i;
+	int		fd;
+	char	*tmp;
+	int		i;
 
 	i = 0;
 	data->height = get_height(file_name);
@@ -77,7 +78,9 @@ void	get_map(t_fdf *data, char *file_name)
 	data->map[0] = get_next_line(fd);
 	while (data->map[i])
 	{
-		data->map[++i] = get_next_line(fd);
+		tmp = get_next_line(fd);
+		data->map[++i] = ft_strtrim(tmp, "\n");
+		free(tmp);
 	}
 	close(fd);
 }
@@ -95,7 +98,7 @@ void	read_file(t_fdf *data)
 	i = 0;
 	curr_width = 0;
 	prev_width = 0;
-	while ((data->map[i]))
+	while (data->map[i])
 	{
 		curr_width = ft_count_words(data->map[i]);
 		if (prev_width == 0)
