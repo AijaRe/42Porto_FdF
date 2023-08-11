@@ -31,6 +31,19 @@ dow, minimizing, and so forth).
 program in a clean way.
 - The use of the images of the MiniLibX is mandatory.
 
+## Examples
+20-60 map
+
+<img
+  src="fdf_images/20-60_map.jpg"
+  alt="20-60 map"
+  title="20-60 map"
+  style="display: block; margin: 10 auto; max-width: 500px">
+![20-60 image](fdf_images/20-60.jpg)
+map t1 with colors
+![t1 colored map](fdf_images/t1_map.jpg)
+![t1 colored image](fdf_images/t1.jpg)
+
 ## FdF plan
 - Argument input check.
 - Read map into string array (get_next_line).
