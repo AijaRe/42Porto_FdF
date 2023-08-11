@@ -31,6 +31,21 @@ dow, minimizing, and so forth).
 program in a clean way.
 - The use of the images of the MiniLibX is mandatory.
 
+## FdF plan
+- Argument input check.
+- Read map into string array (get_next_line).
+- Read each map data point into into a structure (register z coordinate and color).
+- Initialize mlx and create a new window.
+- Create the hooks for x butoon and esc key.
+- Create new mlx image and associate it to the main data structure.
+- Itarate over the size of the map and transfer z_coordinate and color to each point and the next connecting point. x → x1, y → y1 etc.
+- Transform the map:
+  - Scale (diagonal of the map should be less than the height of the image size). Ideally you  would take into account the z coordinate, but this project scales only based on map size.
+  - Isometric rotation for each point (this takes into account the z coordinate).
+  - Center the map by shifting the points.
+- Draw the line between the two points, using Bresenhams algorithm.
+- After drawing everything into the mlx image, place it on the screen.
+
 ## Tips
 
 Keycodes: look for X11 include file "keysymdef.h” /usr/include/X11/keysymdef.h. Convert hex to dec to use in the code.
