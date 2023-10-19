@@ -59,6 +59,18 @@ map t1 with colors
 - Draw the line between the two points, using Bresenhams algorithm.
 - After drawing everything into the mlx image, place it on the screen.
 
+## Norminette
+This project has to be written in accordance with the Norm, which is the coding standard of the school 42.
+
+The Norm includes:
+- Forbidden: for, do...while, switch, case, goto, ternary operators and variable-length arrays 
+- Maximum of 25 lines per function
+- Maximum line length: 80 columns
+- Maximum 4 parameters per function 
+- Variable assignments and declarations must be on separate lines
+- etc...
+
+  
 ## Tips
 
 Keycodes: look for X11 include file "keysymdef.h” /usr/include/X11/keysymdef.h. Convert hex to dec to use in the code.
